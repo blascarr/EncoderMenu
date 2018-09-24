@@ -40,6 +40,13 @@
     uint8_t lastEncoded = 10;
     uint8_t sum = 0, encoder_steps = 1;
     int8_t _inc = 1;
+
+    //Function Pointers
+    void (*f_CW) (void);
+    void (*f_CCW) (void);
+    void (*_f) (void);
+    void (*f_press) (void);
+
     #if defined(ENCODER_USE_INTERRUPTS)
 
       EncoderMenu (uint8_t pinA, uint8_t pinB, uint8_t pinSW, bool clockwise = true, bool pullup = false)
@@ -92,7 +99,7 @@
     #endif
      
     #if defined(ENCODER_USE_INTERRUPTS)
-      void EncoderMenu::read(  ){
+      bool EncoderMenu::read(  ){
         int MSB = digitalRead(EncoderMenu::_pinA); //MSB = most significant bit
         int LSB = digitalRead(EncoderMenu::_pinB); //LSB = least significant bit
         int encoded = (MSB << 1) |LSB; //converting the 2 pin value to single number
@@ -101,9 +108,10 @@
         EncoderMenu::sum  = (EncoderMenu::lastEncoded << 2) | encoded; //adding it to the previous encoded value  
         EncoderMenu::lastEncoded = encoded; //store this value for next time
 
-        if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {EncoderMenu::_counter = EncoderMenu::_counter - _inc ;  }
-        if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {EncoderMenu::_counter = EncoderMenu::_counter + _inc ;  }
-        
+        if (sum == 0b1101 || sum == 0b0100 || sum == 0b0010 || sum == 0b1011) {EncoderMenu::_counter = EncoderMenu::_counter - _inc ; dir = true; }
+        if (sum == 0b1110 || sum == 0b0111 || sum == 0b0001 || sum == 0b1000) {EncoderMenu::_counter = EncoderMenu::_counter + _inc ; dir = false; }
+        this->update();
+        return dir;
       }
     #else
       bool EncoderMenu::read(  ){
@@ -116,7 +124,10 @@
            _counter= _counter - _inc;
            dir = true;
         }
-        _Last_DialPos = DialPos; return dir;
+        _Last_DialPos = DialPos; 
+        this->update();
+        return dir;
+
       } // Debounces the button and returns the state if it was just changed.
     #endif
     
@@ -134,14 +145,24 @@
 
       if ( value != _lastValue) {
         if(_lastValue < value){
-          g();
+          this->f_CW();
         }else{
-          h();
+          this->f_CCW();
         }
         _lastValue = value;
-        f();
+        this->_f();
       }
       return (value);
+    }
+
+    void EncoderMenu::update( ){
+      this->pressed();
+      this->readCounter();
+    }
+
+    int EncoderMenu::counter( ){
+      return this->_lastValue;
+      
     }
 
     /*long EncoderMenu::readCounter( void (*f)() = NULL  ){
@@ -167,13 +188,37 @@
       _limited = false;
     }
 
-    void EncoderMenu::pressed(void (*f)(), bool triggerState = LOW) {
+    void EncoderMenu::set_f_CW( void (*fCW)() = NULL ){
+      f_CW = fCW;
+    }
+
+    void EncoderMenu::set_f_CCW( void (*fCCW)() = NULL ){
+
+      f_CCW = fCCW;
+    }
+
+    void EncoderMenu::set_f_C( void (*fC)() = NULL){
+      _f = fC;
+    }
+
+    void EncoderMenu::set_f_rotary( void (*f)() = NULL, void (*g)() = NULL, void (*h)() = NULL ){
+      this->set_f_C(f);
+      this->set_f_CW(g);
+      this->set_f_CCW(h);
+    }
+
+    void EncoderMenu::set_f_press( void (*f)() ){
+      f_press = f;
+    }
+
+    void EncoderMenu::pressed( bool triggerState = LOW ) {
         _state = digitalRead(_pinSW); // Checks if the buttons has changed state      
         if (_state != _lastState) {
             
             _lastState = _state;
             if (_lastState == triggerState){
-              f();
+              
+              this->f_press();
             }
         }
     }
