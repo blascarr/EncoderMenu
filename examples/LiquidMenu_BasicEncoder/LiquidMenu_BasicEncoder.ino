@@ -7,15 +7,15 @@
 LiquidCrystal_I2C lcd(0x3f,16,2);
 EncoderMenu rotary(2,3,4, false , true);
 
-char* playermenu[] = {"Play", "Next", "Prev", "Stop", "Resume"};
+char* playermenu[] = {"1 Play", "2 Next", "3 Previous", "4 Stop", "5 Resume"};
 int npointer = 0;
 int* pointermenu = &npointer;
 
 char uptext[] = "Play  ";
-char *uptr = &(uptext[0] );
+char *uptr = playermenu[0] ;
 
 char downtext[] = "Next   ";
-char *dptr = &(downtext[0] );
+char *dptr = playermenu[1];
 
 String txt = "Time";
 
@@ -38,7 +38,7 @@ byte rFocus[8] = {
 };
 
 void menuUpdate(){
-  //Serial.println("MENU UPDATE");
+  Serial.println("MENU UPDATE");
   menu.update();  
 }
 
@@ -49,33 +49,29 @@ void line_fn(){
 
 void ifPressed(){
   Serial.println("Button Pressed");
-  npointer= npointer+1;
+  //npointer= npointer+1;
   Serial.println(npointer);
   Serial.print("Ptr: ");
   Serial.println( *pointermenu );
 
   Serial.print("Size: ");
   Serial.println( sizeof(playermenu)/sizeof(playermenu[0]) );
-  changetxtvar( playermenu[npointer], uptr );
-  changetxtvar( playermenu[npointer+1], dptr );
 
    menu.update(); 
 }
 
-void changetxtvar( String txt, char *var ){
-
-  //Plus 1 for real size of text in array
-  txt.toCharArray( var , strlen(var) + 1 );
-}
-
 void ifCWS(){
   
-  Serial.println("CLOCKWISE");
-  menu.switch_focus( false);
+  Serial.print("CLOCKWISE: ");
+  //menu.switch_focus( false);
   if(npointer > 0){
     npointer= npointer-1;
-    changetxtvar( playermenu[npointer], uptr );
-    changetxtvar( playermenu[npointer+1], dptr );
+    uptr=playermenu[npointer];
+    dptr=playermenu[npointer+1];
+    //changetxtvar( playermenu[npointer], uptr );
+    Serial.print("Txt: ");Serial.println(playermenu[npointer]);
+    //changetxtvar( playermenu[npointer+1], dptr );
+    Serial.print("Txt: ");Serial.println(playermenu[npointer+1]);
   }
   
   Serial.println(npointer);
@@ -83,15 +79,16 @@ void ifCWS(){
 }
 
 void ifCCWS(){
-  Serial.println("ANTICLOCKWISE");
-  menu.switch_focus(true);
+  Serial.print("ANTICLOCKWISE: ");
+  //menu.switch_focus(true);
   // Minus 2 because size of lcd is for two columns
   if(npointer < sizeof(playermenu)/sizeof(playermenu[0])-2){
     npointer= npointer+1;
-    changetxtvar( playermenu[npointer], uptr );
-    changetxtvar( playermenu[npointer+1], dptr );
+    uptr=playermenu[npointer];
+    dptr=playermenu[npointer+1];
   }
-  //Serial.println(npointer);
+
+  Serial.println(npointer);
   
 }
 
