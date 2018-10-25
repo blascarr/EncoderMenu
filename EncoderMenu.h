@@ -42,10 +42,12 @@
     int8_t _inc = 1;
 
     //Function Pointers
-    void (*f_CW) (void);
-    void (*f_CCW) (void);
-    void (*_f) (void);
-    void (*f_press) (void);
+    typedef void (*_func)();
+
+    _func f_CW ;
+    _func f_CCW ;
+    _func _f ;
+    _func f_press ;
 
     #if defined(ENCODER_USE_INTERRUPTS)
 
@@ -188,18 +190,21 @@
       _limited = false;
     }
 
-    void set_f_CW( void (*fCW)() = NULL ){
+    void set_f_CW( void (*fCW)()  ){
       f_CW = fCW;
     }
 
-    void set_f_CCW( void (*fCCW)() = NULL ){
-
+    void set_f_CCW( void (*fCCW)()  ){
       f_CCW = fCCW;
     }
 
-    void set_f_C( void (*fC)() = NULL){
+    void set_f_C( void (*fC)()  ){
       _f = fC;
     }
+
+    /*void set_g_C( void (fC)()){
+      _f = fC;
+    }*/
 
     void set_f_rotary( void (*f)() = NULL, void (*g)() = NULL, void (*h)() = NULL ){
       this->set_f_C(f);
@@ -217,9 +222,8 @@
             
             _lastState = _state;
             if (_lastState == triggerState){
-              
-              this->f_press();
-            }
+             this->f_press();
+          }
         }
     }
    
